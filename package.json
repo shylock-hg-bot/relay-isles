@@ -1,0 +1,1 @@
+{"name":"relay-isles","private":true,"type":"module","scripts":{"test":"node --test test.mjs","dev":"node server.mjs"}}

@@ -1,0 +1,6 @@
+// node sample-bot.mjs https://PUBLIC-URL CODE [NAME]
+// Join a lobby BEFORE the human host clicks Start. Node 20+, no dependencies.
+const [base,code,name='HTTP Captain']=process.argv.slice(2);if(!base||!code)throw Error('Usage: node sample-bot.mjs BASE_URL CODE [NAME]');
+async function request(path,body,token){const r=await fetch(base+'/api/matches/'+code.toUpperCase()+path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},...(body?{body:JSON.stringify(body)}:{})});const d=await r.json();if(!r.ok)throw Error(d.error);return d}
+const seat=await request('/join',{name});console.log('Joined seat',seat.player,'— waiting for host to start');
+while(true){const s=await request('');if(s.phase==='finished'){console.log('Finished. Winners:',s.winner,'scores:',s.players.map(p=>p.score));break;}if(s.phase==='playing'&&s.turn===seat.player){const a=s.legalMoves.filter(a=>a.type==='claim');const action=a.length?a[Math.floor(Math.random()*a.length)]:{type:s.players[seat.player].energy<6?'charge':'signal'};try{await request('/move',{player:seat.player,version:s.version,action},seat.token);console.log(action)}catch(e){console.log('Retry after refresh:',e.message)}}await new Promise(r=>setTimeout(r,3000));}
